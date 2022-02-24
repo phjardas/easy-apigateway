@@ -2,7 +2,6 @@
 import type {
   APIGatewayProxyEventBase,
   APIGatewayProxyResult,
-  APIGatewayTokenAuthorizerEvent,
   Handler,
 } from "aws-lambda";
 import { CacheOptions } from "./caching";
@@ -18,21 +17,6 @@ export type AuthorizerContext = {
   /** JSON serialized array of permissions */
   permissions: string;
 };
-
-export type Policy = {
-  principalId: string;
-  context: Omit<AuthorizerContext, "principalId">;
-  policyDocument: {
-    Version: "2012-10-17";
-    Statement: Array<{
-      Action: string;
-      Effect: "Allow" | "Deny";
-      Resource: string;
-    }>;
-  };
-};
-
-export type Authorizer = Handler<APIGatewayTokenAuthorizerEvent, Policy>;
 
 /**
  * Every authorized lambda handler receives this context to

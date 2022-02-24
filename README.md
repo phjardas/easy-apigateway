@@ -8,7 +8,6 @@ This library provides the following functionality out of the box:
 
 - Handle different return types of lambda implementations.
 - Handle errors thrown by lambda implementations.
-- Authorize requests using JWT.
 - A local development server using [express](https://www.npmjs.com/package/express).
 
 ## Basic usage
@@ -137,13 +136,13 @@ There's a few common special lambda handlers that you'll need in most of your ap
 Use this handler as the authorizer in your API Gateway.
 
 ```typescript
-import { parseJwtOptionsFromEnv } from "easy-apigateway";
-import { lambda } from "../lambda";
+import { createTokenAuthorizer } from "easy-apigateway";
 
-// parse the options from the environment
-const options = parseJwtOptionsFromEnv();
-
-export const handler = lambda.createAuthorizer(options);
+export const handler = createTokenAuthorizer(async (authToken) => ({
+  authToken,
+  principalId: "test",
+  permissions: ["a", "b"],
+}));
 ```
 
 ### Options
@@ -206,7 +205,6 @@ import * as express from "express";
 import { createLocalExpressAPI, HandlerMap, Route } from "easy-apigateway";
 
 // Import your lambdas created by the framework.
-import { handler as authorizer } from "../lambdas/authorizer";
 import { handler as optionsHandler } from "../lambdas/options";
 import { handler as getOrganization } from "../lambdas/getOrganization";
 
@@ -229,8 +227,6 @@ const routes: Array<Route> = [
     path: "/organizations/{orgId}",
     // There needs to be a corresponding entry in the hanlder map.
     handlerId: "getOrganization",
-    // Whether to authorize requests by parsing the `Authorization` header.
-    authorizerId: "default",
   },
 ];
 
@@ -239,7 +235,6 @@ app.use(
   createLocalExpressAPI({
     handlers,
     routes,
-    authorizers: { default: authorizer },
     // If an `optionsHandler` is provided, every route will automatically
     // get an additional `OPTIONS` route with this handler.
     optionsHandler,
@@ -287,10 +282,3 @@ export const handler = lambda.authorized(() => {
   return { message: "ok" };
 });
 ```
-
-## Roadmap
-
-The items in this list are in no particular order.
-
-- Add options to apply caching behavior, eg. based on a `lastModified` field in the response payload.
-- Make CORS options configurable, eg. the allowed headers and methods and the cache duration.
