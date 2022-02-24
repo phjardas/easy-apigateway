@@ -145,6 +145,23 @@ export const handler = createTokenAuthorizer(async (authToken) => ({
 }));
 ```
 
+For authorization with OAuth JWT tokens, you can use the following method:
+
+```typescript
+import { createTokenAuthorizer, createJwtAuthorizer } from "easy-apigateway";
+
+export const handler = createTokenAuthorizer(
+  createJwtAuthorizer({
+    issuer: "https://issuer.com",
+    audience: "https://audience.com",
+    parsePayload: (jwt) => ({
+      principalId: jwt.sub,
+      permissions: ["a", "b"],
+    }),
+  })
+);
+```
+
 ### Options
 
 Use this handler to allow `OPTIONS` request to enable CORS.
