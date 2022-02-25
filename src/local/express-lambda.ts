@@ -6,7 +6,7 @@ import type {
   Handler,
 } from "aws-lambda";
 import * as express from "express";
-import type { AuthorizerContext } from "../types";
+import type { AuthorizedLambdaEvent, AuthorizerContext } from "../types";
 
 export function expressLambda(
   name: string,
@@ -34,18 +34,6 @@ export function expressLambda(
 function createEvent(
   req: express.Request
 ): APIGatewayProxyEventBase<AuthorizerContext> {
-  const queryStringParameters = Object.fromEntries(
-    Object.entries(req.query)
-      .map(([key, value]) => typeof value === "string" && [key, value])
-      .filter((e) => Boolean(e)) as Array<[string, string]>
-  );
-
-  const multiValueQueryStringParameters = Object.fromEntries(
-    Object.entries(req.query)
-      .map(([key, value]) => Array.isArray(value) && [key, value])
-      .filter((e) => Boolean(e)) as Array<[string, Array<string>]>
-  );
-
   const headers = Object.entries(req.headers).reduce(
     (acc, [key, value]) => ({ ...acc, [key]: value }),
     {}
@@ -53,8 +41,7 @@ function createEvent(
 
   return {
     pathParameters: req.params,
-    queryStringParameters,
-    multiValueQueryStringParameters,
+    ...createQueryStringParameters(req),
     headers,
     multiValueHeaders: {},
     httpMethod: req.method,
@@ -136,4 +123,24 @@ function sendResponse(
   } else {
     res.status(204).end();
   }
+}
+
+function createQueryStringParameters(
+  req: express.Request
+): Pick<
+  AuthorizedLambdaEvent,
+  "queryStringParameters" | "multiValueQueryStringParameters"
+> {
+  const entries = Object.entries(req.query).map(([key, value]) =>
+    typeof value === "string"
+      ? [key, [value]]
+      : [key, Array.isArray(value) ? value.map((v) => v.toString()) : undefined]
+  );
+
+  return {
+    queryStringParameters: Object.fromEntries(
+      entries.map(([key, value]) => [key, value?.slice(-1)?.[0]])
+    ),
+    multiValueQueryStringParameters: Object.fromEntries(entries),
+  };
 }
