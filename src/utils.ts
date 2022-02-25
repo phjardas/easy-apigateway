@@ -6,7 +6,7 @@ import { badRequestError, notFoundError } from "./errors";
  */
 export function parseBody<T>(event: APIGatewayProxyEventBase<unknown>): T {
   const body = parseBodyMaybe<T>(event);
-  if (!body) throw new Error("Missing request body");
+  if (!body) throw badRequestError("Missing request body");
   return body;
 }
 
@@ -20,7 +20,13 @@ export function parseBodyMaybe<T>(
   const body = event.isBase64Encoded
     ? Buffer.from(event.body, "base64").toString("utf8")
     : event.body;
-  return JSON.parse(body);
+
+  try {
+    return JSON.parse(body);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw badRequestError(error.message);
+  }
 }
 
 function pathParam(

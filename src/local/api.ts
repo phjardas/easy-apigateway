@@ -1,29 +1,55 @@
 import * as bodyParser from "body-parser";
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 import type { HTTPLambdaHandler } from "../types";
+import { createAuthorizers } from "./authorizer";
 import { expressLambda } from "./express-lambda";
-import type { APIOptions, HandlerMap, Route } from "./types";
+import type {
+  APIOptions,
+  AuthorizerRegistration,
+  HandlerResolver,
+  Route,
+} from "./types";
 
 class LocalExpressAPI {
   readonly router = Router();
-  private readonly handlers: HandlerMap;
+  private readonly handlerResolver: HandlerResolver;
+  private readonly authorizerMiddlewares: Record<string, RequestHandler>;
 
-  constructor({ handlers }: { handlers: HandlerMap }) {
-    this.handlers = handlers;
+  constructor({
+    handlerResolver,
+    authorizers,
+  }: {
+    handlerResolver: HandlerResolver;
+    authorizers?: Array<AuthorizerRegistration>;
+  }) {
+    this.handlerResolver = handlerResolver;
+    this.authorizerMiddlewares = createAuthorizers(authorizers ?? []);
   }
 
-  route({
+  async route({
     method,
     path,
     handlerId,
+    authorizerId,
     handler,
-  }: Route & { handler?: HTTPLambdaHandler }) {
+  }: Route & {
+    handler?: HTTPLambdaHandler;
+  }) {
     if (!handler) {
-      handler = this.handlers[handlerId];
+      handler = await this.handlerResolver(handlerId);
       if (!handler) throw new Error(`No handler defined: ${handlerId}`);
     }
 
     const routeHandlers = [expressLambda(handlerId, handler)];
+
+    if (authorizerId) {
+      const authorizer = this.authorizerMiddlewares[authorizerId];
+      if (!authorizer) {
+        throw new Error(`Authorized routes require an authorizer`);
+      }
+
+      routeHandlers.unshift(authorizer);
+    }
 
     if (["post", "put", "patch"].includes(method)) {
       routeHandlers.unshift(bodyParser.text({ type: "application/json" }));
@@ -45,29 +71,33 @@ type RouterMethod =
   | "options"
   | "head";
 
-export function createLocalExpressAPI({
-  handlers,
+export async function createLocalExpressAPI({
+  handlerResolver,
   routes,
+  authorizers,
   optionsHandler,
-}: APIOptions): Router {
-  const api = new LocalExpressAPI({ handlers });
+}: APIOptions): Promise<Router> {
+  const api = new LocalExpressAPI({ handlerResolver, authorizers });
 
   // register routes
-  routes.forEach((route) => api.route(route));
+  await Promise.all(routes.map((route) => api.route(route)));
 
-  // register OPTIONS route for every path
+  // register OPTIONS routes
   if (optionsHandler) {
-    routes
-      .map((route) => route.path)
-      .filter((val, index, arr) => arr.indexOf(val) === index)
-      .forEach((path) =>
-        api.route({
-          method: "options",
-          path,
-          handlerId: "cors",
-          handler: optionsHandler,
-        })
-      );
+    await Promise.all(
+      routes
+        .filter((route) => route.cors)
+        .map((route) => route.path)
+        .filter((val, index, arr) => arr.indexOf(val) === index)
+        .map((path) =>
+          api.route({
+            method: "options",
+            path,
+            handlerId: "cors",
+            handler: optionsHandler,
+          })
+        )
+    );
   }
 
   return api.router;
