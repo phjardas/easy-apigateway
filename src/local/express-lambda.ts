@@ -17,7 +17,7 @@ export function expressLambda(
 ): express.RequestHandler {
   return async (req, res, next) => {
     try {
-      const event = createEvent(req);
+      const event = createEvent<AuthorizerContext>(req);
       const context = createContext({ name });
 
       const response = await handler(event, context, () => {
@@ -31,9 +31,9 @@ export function expressLambda(
   };
 }
 
-function createEvent(
+export function createEvent<TAuthorizerContext>(
   req: express.Request
-): APIGatewayProxyEventBase<AuthorizerContext> {
+): APIGatewayProxyEventBase<TAuthorizerContext> {
   const headers = Object.entries(req.headers).reduce(
     (acc, [key, value]) => ({ ...acc, [key]: value }),
     {}
@@ -63,12 +63,12 @@ function createEvent(
       resourceId: "?",
       resourcePath: "?",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      authorizer: (req as any).authContext as AuthorizerContext,
+      authorizer: (req as any).authContext as TAuthorizerContext,
     },
   };
 }
 
-function createContext({
+export function createContext({
   name,
   timeout = 5000,
 }: {

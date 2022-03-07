@@ -1,12 +1,25 @@
-import type { APIGatewayTokenAuthorizerHandler } from "aws-lambda";
+import type {
+  APIGatewayRequestAuthorizerHandler,
+  APIGatewayTokenAuthorizerHandler,
+} from "aws-lambda";
 import type { HTTPLambdaHandler } from "../types";
 
-export type AuthorizerRegistration = {
-  id: string;
-} & {
+export type TokenAuthorizerRegistration = {
   type: "token";
   authorizer: APIGatewayTokenAuthorizerHandler;
 };
+
+export type RequestAuthorizerRegistration = {
+  type: "request";
+  authorizer: APIGatewayRequestAuthorizerHandler;
+  queryParameters?: string[];
+  headers?: string[];
+};
+
+export type AuthorizerRegistration = { id: string } & (
+  | TokenAuthorizerRegistration
+  | RequestAuthorizerRegistration
+);
 
 export type HandlerResolver = (
   handlerId: string

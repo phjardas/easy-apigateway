@@ -1,9 +1,13 @@
 import type {
   APIGatewayAuthorizerResult,
+  APIGatewayRequestAuthorizerHandler,
   APIGatewayTokenAuthorizerHandler,
 } from "aws-lambda";
 import type { AuthorizerContext } from "../types";
-import type { AuthorizerContextCreator } from "./types";
+import type {
+  AuthorizerContextCreator,
+  RequestAuthorizerContextCreator,
+} from "./types";
 
 /**
  * Create a lambda handler that acts as an API Gateway authorizer.
@@ -15,6 +19,20 @@ export function createTokenAuthorizerLambda(
     try {
       const context = await createAuthorizerContext(authorizationToken);
       return createPolicy(context, methodArn);
+    } catch (error) {
+      console.error("Error:", error);
+      throw "Unauthorized";
+    }
+  };
+}
+
+export function createRequestAuthorizerLambda(
+  createAuthorizerContext: RequestAuthorizerContextCreator
+): APIGatewayRequestAuthorizerHandler {
+  return async (event) => {
+    try {
+      const context = await createAuthorizerContext(event);
+      return createPolicy(context, event.methodArn);
     } catch (error) {
       console.error("Error:", error);
       throw "Unauthorized";
