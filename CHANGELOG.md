@@ -1,5 +1,11 @@
 # easy-apigateway
 
+## 0.2.0
+
+### Minor Changes
+
+- [`3c64f03`](https://github.com/phjardas/easy-apigateway/commit/3c64f03ba56d0892bd61f01091786d6c2d25cff3) Thanks [@phjardas](https://github.com/phjardas)! - Add support for request authorizer
+
 ## 0.1.1
 
 ### Patch Changes
