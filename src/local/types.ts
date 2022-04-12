@@ -41,10 +41,15 @@ export type Method =
   | "head"
   | "HEAD";
 
+export type RequestBodySpec =
+  | { type: "json" }
+  | { type: "binary"; mimeTypes?: string; limit?: string };
+
 export type Route = {
   method: Method;
   path: string;
   handlerId: string;
+  requestBody?: RequestBodySpec;
   authorizerId?: string;
   cors?: boolean;
 };

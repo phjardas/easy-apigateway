@@ -42,6 +42,7 @@ export function createEvent<TAuthorizerContext>(
   return {
     pathParameters: req.params,
     ...createQueryStringParameters(req),
+    ...parseBody(req.body),
     headers,
     multiValueHeaders: {},
     httpMethod: req.method,
@@ -65,6 +66,22 @@ export function createEvent<TAuthorizerContext>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       authorizer: (req as any).authContext as TAuthorizerContext,
     },
+  };
+}
+
+function parseBody(
+  body: null | string | Buffer
+): Pick<APIGatewayProxyEventBase<unknown>, "body" | "isBase64Encoded"> {
+  if (body instanceof Buffer) {
+    return {
+      body: body.toString("base64"),
+      isBase64Encoded: true,
+    };
+  }
+
+  return {
+    body: body,
+    isBase64Encoded: false,
   };
 }
 

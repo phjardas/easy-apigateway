@@ -31,6 +31,7 @@ class LocalExpressAPI {
     path,
     handlerId,
     authorizerId,
+    requestBody,
     handler,
   }: Route & {
     handler?: HTTPLambdaHandler;
@@ -51,8 +52,21 @@ class LocalExpressAPI {
       routeHandlers.unshift(authorizer);
     }
 
-    if (["post", "put", "patch"].includes(method)) {
-      routeHandlers.unshift(bodyParser.text({ type: "application/json" }));
+    if (requestBody) {
+      switch (requestBody.type) {
+        case "binary": {
+          routeHandlers.unshift(
+            bodyParser.raw({
+              type: requestBody.mimeTypes ?? "*/*",
+              limit: requestBody.limit,
+            })
+          );
+          break;
+        }
+        default: {
+          routeHandlers.unshift(bodyParser.text({ type: "application/json" }));
+        }
+      }
     }
 
     // replace `{pathVariable}` with `:pathVariable`
