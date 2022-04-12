@@ -1,5 +1,11 @@
 # easy-apigateway
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4](https://github.com/phjardas/easy-apigateway/pull/4) [`7879903`](https://github.com/phjardas/easy-apigateway/commit/78799030d84a52722756cca1fbe16c7bf29b5e95) Thanks [@phjardas](https://github.com/phjardas)! - Add support for binary request bodies
+
 ## 0.2.0
 
 ### Minor Changes
