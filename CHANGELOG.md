@@ -1,5 +1,13 @@
 # easy-apigateway
 
+## 0.4.0
+
+### Minor Changes
+
+- [`efc055f`](https://github.com/phjardas/easy-apigateway/commit/efc055ffdc6c2feb2fcfb9f1cb7c0d8bf094bba2) Thanks [@phjardas](https://github.com/phjardas)! - Add configuration options for CORS
+
+* [`b5ea920`](https://github.com/phjardas/easy-apigateway/commit/b5ea92090b533b16502d03313d908f8aaf5fb1ee) Thanks [@phjardas](https://github.com/phjardas)! - Add support for Sentry
+
 ## 0.3.0
 
 ### Minor Changes
