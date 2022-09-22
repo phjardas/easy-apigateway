@@ -7,6 +7,7 @@ import type {
 import type { CacheOptions } from "./caching";
 import type { CorsOptions } from "./cors";
 import type { PermissionEvaluators, PermissionsEvaluator } from "./permissions";
+import type { SentryOptions } from "./sentry";
 
 /**
  * The context returned from the API Gateway authorizer,
@@ -34,6 +35,7 @@ export type LambdaFrameworkOptions = {
   permissionEvaluators?: PermissionEvaluators;
   includeStackTrace?: boolean;
   cors?: CorsOptions;
+  sentry?: Omit<SentryOptions, "environment">;
 };
 
 export type HTTPLambdaHandler = Handler<

@@ -12,6 +12,12 @@ import {
   defaultPermissionEvaluators,
   PermissionEvaluatorFactory,
 } from "./permissions";
+import {
+  captureErrorWithSentry,
+  createSentryWrapper,
+  setSentryUser,
+  type SentryWrapper,
+} from "./sentry";
 import type {
   AuthContext,
   AuthorizedLambdaHandler,
@@ -26,9 +32,16 @@ import { createYupValidationErrorResponse } from "./yup";
  * A framework to create lambda handlers for REST APIs.
  */
 export class LambdaFramework {
+  private readonly sentryWrapper: SentryWrapper;
   private readonly permissionEvaluatorFactory: PermissionEvaluatorFactory;
 
   constructor(private readonly options: LambdaFrameworkOptions) {
+    this.sentryWrapper = createSentryWrapper(
+      options.sentry
+        ? { ...options.sentry, environment: options.stage }
+        : undefined
+    );
+
     this.permissionEvaluatorFactory = new PermissionEvaluatorFactory({
       ...defaultPermissionEvaluators,
       ...options.permissionEvaluators,
@@ -59,6 +72,7 @@ export class LambdaFramework {
   > {
     return this.unauthorized((event) => {
       const context = this.createAuthContext(event);
+      setSentryUser({ id: context.principalId });
       return handler(event, context);
     }, lambdaOptions);
   }
@@ -82,7 +96,7 @@ export class LambdaFramework {
     handler: HTTPLambdaHandler,
     lambdaOptions?: LambdaOptions
   ): HTTPLambdaHandler {
-    return async (event, ...args) => {
+    return this.sentryWrapper(async (event, ...args) => {
       try {
         const result = await handler(event, ...args);
 
@@ -97,7 +111,7 @@ export class LambdaFramework {
       } catch (error) {
         return this.createErrorResponse(error, event);
       }
-    };
+    });
   }
 
   /**
@@ -192,6 +206,7 @@ export class LambdaFramework {
 
     if (statusCode >= 500) {
       console.warn("Error in lambda handler:", error);
+      captureErrorWithSentry(error);
     }
 
     // TODO: can we somehow elegantly propagate properties from the error?

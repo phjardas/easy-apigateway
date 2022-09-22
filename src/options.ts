@@ -24,5 +24,17 @@ export function parseLambdaFrameworkOptionsFromEnv(
 
   return {
     stage: get("STAGE", "development"),
+    includeStackTrace: get("NODE_ENV", "development") === "development",
+    sentry: parseSentry(get),
   };
+}
+
+function parseSentry(get: Get): LambdaFrameworkOptions["sentry"] {
+  const dsn = get("SENTRY_DSN", "");
+  if (!dsn) return;
+
+  const enabled = Boolean(get("SENTRY_ENABLED", "true"));
+  const tracesSampleRate = parseFloat(get("SENTRY_TRACES_SAMPLE_RATE", "0"));
+
+  return { dsn, tracesSampleRate, enabled };
 }
