@@ -6,6 +6,7 @@ import type {
 } from "aws-lambda";
 import { ValidationError } from "yup";
 import { applyCacheConfig } from "./caching";
+import { createOptionsLambda } from "./cors";
 import { InternationalizableError, StatusError } from "./error";
 import {
   defaultPermissionEvaluators,
@@ -115,16 +116,7 @@ export class LambdaFramework {
    * ```
    */
   createOptionsLambda(): HTTPLambdaHandler {
-    return this.createStaticLambda({
-      statusCode: 204,
-      headers: {
-        "access-control-allow-headers": "authorization,content-type",
-        "access-control-allow-methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-        "access-control-allow-credentials": "true",
-        "access-control-max-age": "3600",
-      },
-      body: "",
-    });
+    return createOptionsLambda(this, this.options.cors);
   }
 
   private createAuthContext({

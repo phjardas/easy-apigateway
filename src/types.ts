@@ -4,7 +4,8 @@ import type {
   APIGatewayProxyResult,
   Handler,
 } from "aws-lambda";
-import { CacheOptions } from "./caching";
+import type { CacheOptions } from "./caching";
+import type { CorsOptions } from "./cors";
 import type { PermissionEvaluators, PermissionsEvaluator } from "./permissions";
 
 /**
@@ -32,6 +33,7 @@ export type LambdaFrameworkOptions = {
   stage: string;
   permissionEvaluators?: PermissionEvaluators;
   includeStackTrace?: boolean;
+  cors?: CorsOptions;
 };
 
 export type HTTPLambdaHandler = Handler<
