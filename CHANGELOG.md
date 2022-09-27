@@ -1,5 +1,11 @@
 # easy-apigateway
 
+## 1.0.0
+
+### Major Changes
+
+- [#7](https://github.com/phjardas/easy-apigateway/pull/7) [`2e80127`](https://github.com/phjardas/easy-apigateway/commit/2e801275bcfd443098527b230eef3da95070b2dd) Thanks [@phjardas](https://github.com/phjardas)! - Completely rewritten API
+
 ## 0.4.0
 
 ### Minor Changes
