@@ -3,11 +3,7 @@ export default {
   preset: "ts-jest",
   testEnvironment: "node",
   testMatch: ["**/*.(test|spec).ts"],
-  globals: {
-    "ts-jest": {
-      diagnostics: {
-        ignoreCodes: ["TS151001"],
-      },
-    },
+  transform: {
+    ".ts$": ["ts-jest"],
   },
 };

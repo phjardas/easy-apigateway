@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import type {
   APIGatewayProxyEventBase,
   APIGatewayProxyResult,
 } from "aws-lambda";
-import * as createETag from "etag";
+import createETag from "etag";
 
 export type GetLastModifiedFn = (body: any) => number | undefined;
 

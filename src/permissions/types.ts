@@ -1,3 +1,5 @@
+import type { DataStore } from "../types";
+
 export type PermissionSpec = { type: string };
 
 export type HasPermissions = (
@@ -33,6 +35,8 @@ export type PermissionsEvaluator = {
 export type PermissionEvaluatorContext = {
   principalId: string;
   permissions: Set<string>;
+  authToken: string;
+  data: DataStore;
 };
 
 export type PermissionEvaluator<Spec extends PermissionSpec> = (

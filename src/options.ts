@@ -12,29 +12,20 @@ function createGet(env: Record<string, string | undefined>): Get {
   };
 }
 
+export function optionsParser<TOptions extends Record<string, unknown>>(
+  factory: (get: Get) => TOptions
+): (env?: Record<string, string | undefined>) => TOptions {
+  return (env = process.env) => factory(createGet(env));
+}
+
 /**
  * Read the configuration for the lambda framework from the process
  * environment. Applies sensible defaults. If any of the required
  * options is missing, this function will throw.
  */
-export function parseLambdaFrameworkOptionsFromEnv(
-  env: Record<string, string | undefined> = process.env
-): LambdaFrameworkOptions {
-  const get = createGet(env);
-
-  return {
-    stage: get("STAGE", "development"),
-    includeStackTrace: get("NODE_ENV", "development") === "development",
-    sentry: parseSentry(get),
-  };
-}
-
-function parseSentry(get: Get): LambdaFrameworkOptions["sentry"] {
-  const dsn = get("SENTRY_DSN", "");
-  if (!dsn) return;
-
-  const enabled = Boolean(get("SENTRY_ENABLED", "true"));
-  const tracesSampleRate = parseFloat(get("SENTRY_TRACES_SAMPLE_RATE", "0"));
-
-  return { dsn, tracesSampleRate, enabled };
-}
+export const parseLambdaFrameworkOptionsFromEnv =
+  optionsParser<LambdaFrameworkOptions>((get) => {
+    return {
+      includeStackTrace: get("NODE_ENV", "development") === "development",
+    };
+  });

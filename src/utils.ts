@@ -17,15 +17,17 @@ export function parseBodyMaybe<T>(
   event: APIGatewayProxyEventBase<unknown>
 ): T | undefined {
   if (!event.body) return;
+
   const body = event.isBase64Encoded
     ? Buffer.from(event.body, "base64").toString("utf8")
     : event.body;
 
   try {
     return JSON.parse(body);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    throw badRequestError(error.message);
+  } catch (error) {
+    throw badRequestError(
+      error instanceof Error ? error.message : "Can't parse request body"
+    );
   }
 }
 
@@ -66,4 +68,19 @@ export function pathParams<T>(
 export function required<T>(value: T | undefined): T {
   if (!value) throw notFoundError();
   return value;
+}
+
+export function lookupCache<K, T>(
+  lookupFn: (key: K) => T,
+  keyFn: (key: K) => string
+): (key: K) => T {
+  const values: Record<string, T> = {};
+
+  return (key) => {
+    const keyString = keyFn(key);
+    if (keyString in values) return values[keyString];
+    const value = lookupFn(key);
+    values[keyString] = value;
+    return value;
+  };
 }

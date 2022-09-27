@@ -1,4 +1,5 @@
-import type { PermissionEvaluator, PermissionEvaluators } from "./types";
+import { PermissionEvaluator } from ".";
+import type { PermissionEvaluators } from "./types";
 
 export type PermissionPermissionSpec = {
   type: "permission";
