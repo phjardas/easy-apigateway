@@ -31,7 +31,28 @@ export class InternationalizableError
  * the payload.
  */
 export class StatusError extends InternationalizableError {
-  constructor(readonly code: number, message?: string) {
-    super({ messageKey: `errors.http.${code}`, message });
+  constructor(
+    readonly code: number,
+    message?: string,
+    messageKey?: string,
+    messageArgs?: Array<unknown>
+  ) {
+    super({
+      messageKey: messageKey ?? `errors.http.${code}`,
+      messageArgs,
+      message,
+    });
   }
+}
+
+export function statusErrorFactory(
+  code: number,
+  defaultMessage: string
+): (
+  message?: string,
+  messageKey?: string,
+  ...messageArgs: Array<unknown>
+) => StatusError {
+  return (message = defaultMessage, messageKey, ...messageArgs) =>
+    new StatusError(code, message, messageKey, messageArgs);
 }

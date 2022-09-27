@@ -1,29 +1,7 @@
-import type {
-  APIGatewayRequestAuthorizerHandler,
-  APIGatewayTokenAuthorizerHandler,
-} from "aws-lambda";
+import type { APIGatewayTokenAuthorizerHandler } from "aws-lambda";
 import type { HTTPLambdaHandler } from "../types";
 
-export type TokenAuthorizerRegistration = {
-  type: "token";
-  authorizer: APIGatewayTokenAuthorizerHandler;
-};
-
-export type RequestAuthorizerRegistration = {
-  type: "request";
-  authorizer: APIGatewayRequestAuthorizerHandler;
-  queryParameters?: string[];
-  headers?: string[];
-};
-
-export type AuthorizerRegistration = { id: string } & (
-  | TokenAuthorizerRegistration
-  | RequestAuthorizerRegistration
-);
-
-export type HandlerResolver = (
-  handlerId: string
-) => HTTPLambdaHandler | Promise<HTTPLambdaHandler>;
+export type HandlerMap = Record<string, HTTPLambdaHandler>;
 
 export type Method =
   | "get"
@@ -41,22 +19,16 @@ export type Method =
   | "head"
   | "HEAD";
 
-export type RequestBodySpec =
-  | { type: "json" }
-  | { type: "binary"; mimeTypes?: string; limit?: string };
-
 export type Route = {
   method: Method;
   path: string;
   handlerId: string;
-  requestBody?: RequestBodySpec;
   authorizerId?: string;
-  cors?: boolean;
 };
 
 export type APIOptions = {
-  handlerResolver: HandlerResolver;
+  handlers: HandlerMap;
   routes: Array<Route>;
+  authorizers?: Record<string, APIGatewayTokenAuthorizerHandler>;
   optionsHandler?: HTTPLambdaHandler;
-  authorizers?: Array<AuthorizerRegistration>;
 };

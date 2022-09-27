@@ -5,9 +5,7 @@ import type {
   Handler,
 } from "aws-lambda";
 import type { CacheOptions } from "./caching";
-import type { CorsOptions } from "./cors";
-import type { PermissionEvaluators, PermissionsEvaluator } from "./permissions";
-import type { SentryOptions } from "./sentry";
+import type { PermissionsEvaluator } from "./permissions";
 
 /**
  * The context returned from the API Gateway authorizer,
@@ -20,6 +18,12 @@ export type AuthorizerContext = {
   permissions: string;
 };
 
+export type DataStore = {
+  set: <T>(key: string, value: T | undefined) => void;
+  get: <T>(key: string) => T | undefined;
+  getOrCreate: <T>(key: string, factory: () => T) => T;
+};
+
 /**
  * Every authorized lambda handler receives this context to
  * perform permission evaluations.
@@ -27,16 +31,9 @@ export type AuthorizerContext = {
 export type AuthContext = {
   authToken: string;
   principalId: string;
-  permissions: Set<string>;
+  permissions: ReadonlySet<string>;
+  data: DataStore;
 } & PermissionsEvaluator;
-
-export type LambdaFrameworkOptions = {
-  stage: string;
-  permissionEvaluators?: PermissionEvaluators;
-  includeStackTrace?: boolean;
-  cors?: CorsOptions;
-  sentry?: Omit<SentryOptions, "environment">;
-};
 
 export type HTTPLambdaHandler = Handler<
   APIGatewayProxyEventBase<AuthorizerContext>,
@@ -60,4 +57,22 @@ export type AuthorizedLambdaHandler = (
 
 export type LambdaOptions = {
   caching?: CacheOptions;
+};
+
+export type HandlerMiddleware = {
+  id: string;
+  wrapHandler<TEvent, TResult>(
+    framework: LambdaFramework,
+    handler: Handler<TEvent, TResult>
+  ): Handler<TEvent, TResult>;
+};
+
+export type LambdaFrameworkOptions = {
+  handlerMiddleware?: Array<HandlerMiddleware>;
+  includeStackTrace?: boolean;
+};
+
+export type LambdaFramework = {
+  readonly id: string;
+  readonly options: Readonly<LambdaFrameworkOptions>;
 };

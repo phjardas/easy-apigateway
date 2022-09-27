@@ -1,43 +1,38 @@
+import type { APIGatewayTokenAuthorizerHandler } from "aws-lambda";
 import * as bodyParser from "body-parser";
-import { RequestHandler, Router } from "express";
+import { Router, type RequestHandler } from "express";
 import type { HTTPLambdaHandler } from "../types";
 import { createAuthorizers } from "./authorizer";
 import { expressLambda } from "./express-lambda";
-import type {
-  APIOptions,
-  AuthorizerRegistration,
-  HandlerResolver,
-  Route,
-} from "./types";
+import type { APIOptions, HandlerMap, Route } from "./types";
 
 class LocalExpressAPI {
   readonly router = Router();
-  private readonly handlerResolver: HandlerResolver;
+  private readonly handlers: HandlerMap;
   private readonly authorizerMiddlewares: Record<string, RequestHandler>;
 
   constructor({
-    handlerResolver,
+    handlers,
     authorizers,
   }: {
-    handlerResolver: HandlerResolver;
-    authorizers?: Array<AuthorizerRegistration>;
+    handlers: HandlerMap;
+    authorizers: Record<string, APIGatewayTokenAuthorizerHandler>;
   }) {
-    this.handlerResolver = handlerResolver;
-    this.authorizerMiddlewares = createAuthorizers(authorizers ?? []);
+    this.handlers = handlers;
+    this.authorizerMiddlewares = createAuthorizers(authorizers);
   }
 
-  async route({
+  route({
     method,
     path,
     handlerId,
     authorizerId,
-    requestBody,
     handler,
   }: Route & {
     handler?: HTTPLambdaHandler;
   }) {
     if (!handler) {
-      handler = await this.handlerResolver(handlerId);
+      handler = this.handlers[handlerId];
       if (!handler) throw new Error(`No handler defined: ${handlerId}`);
     }
 
@@ -52,21 +47,8 @@ class LocalExpressAPI {
       routeHandlers.unshift(authorizer);
     }
 
-    if (requestBody) {
-      switch (requestBody.type) {
-        case "binary": {
-          routeHandlers.unshift(
-            bodyParser.raw({
-              type: requestBody.mimeTypes ?? "*/*",
-              limit: requestBody.limit,
-            })
-          );
-          break;
-        }
-        default: {
-          routeHandlers.unshift(bodyParser.text({ type: "application/json" }));
-        }
-      }
+    if (["post", "put", "patch"].includes(method)) {
+      routeHandlers.unshift(bodyParser.text({ type: "application/json" }));
     }
 
     // replace `{pathVariable}` with `:pathVariable`
@@ -85,33 +67,33 @@ type RouterMethod =
   | "options"
   | "head";
 
-export async function createLocalExpressAPI({
-  handlerResolver,
+export function createLocalExpressAPI({
+  handlers,
   routes,
   authorizers,
   optionsHandler,
-}: APIOptions): Promise<Router> {
-  const api = new LocalExpressAPI({ handlerResolver, authorizers });
+}: APIOptions): Router {
+  const api = new LocalExpressAPI({
+    handlers,
+    authorizers: authorizers ?? {},
+  });
 
   // register routes
-  await Promise.all(routes.map((route) => api.route(route)));
+  routes.forEach((route) => api.route(route));
 
-  // register OPTIONS routes
+  // register OPTIONS route for every path
   if (optionsHandler) {
-    await Promise.all(
-      routes
-        .filter((route) => route.cors)
-        .map((route) => route.path)
-        .filter((val, index, arr) => arr.indexOf(val) === index)
-        .map((path) =>
-          api.route({
-            method: "options",
-            path,
-            handlerId: "cors",
-            handler: optionsHandler,
-          })
-        )
-    );
+    routes
+      .map((route) => route.path)
+      .filter((val, index, arr) => arr.indexOf(val) === index)
+      .forEach((path) =>
+        api.route({
+          method: "options",
+          path,
+          handlerId: "cors",
+          handler: optionsHandler,
+        })
+      );
   }
 
   return api.router;

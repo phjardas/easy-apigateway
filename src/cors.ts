@@ -1,6 +1,6 @@
 import type { APIGatewayProxyResult } from "aws-lambda";
-import type { LambdaFramework } from "./framework";
-import type { HTTPLambdaHandler } from "./types";
+import { createStatic } from "./lambda";
+import type { HTTPLambdaHandler, LambdaFramework } from "./types";
 
 export type CorsOptions = {
   allowHeaders?: Array<string>;
@@ -11,7 +11,8 @@ export type CorsOptions = {
 };
 
 const defaultOptions: CorsOptions = {
-  allowHeaders: ["authorization", "content-type", "sentry-trace"],
+  allowHeaders: ["authorization", "baggage", "content-type", "sentry-trace"],
+  exposeHeaders: ["baggage", "sentry-trace", "location", "content-disposition"],
   allowMethods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
   allowCredentials: true,
   maxAge: 3600,
@@ -21,7 +22,7 @@ export function createOptionsLambda(
   framework: LambdaFramework,
   options?: CorsOptions
 ): HTTPLambdaHandler {
-  return framework.createStaticLambda({
+  return createStatic(framework, {
     statusCode: 204,
     headers: createHeaders(options),
     body: "",

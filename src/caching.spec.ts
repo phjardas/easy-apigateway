@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { extractLastModifiedFromProperty } from ".";
-import { applyCacheConfig } from "./caching";
+import { applyCacheConfig, extractLastModifiedFromProperty } from "./caching";
 
 describe("caching", () => {
   describe("applyCacheConfig", () => {
