@@ -15,12 +15,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "16.13.2"
+          node-version: "18.19.0"
           cache: npm
 
       - name: Install npm
         run: npm i -g npm@8.4.1
-      
+
       - name: Install
         run: npm ci
 
