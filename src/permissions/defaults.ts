@@ -11,7 +11,7 @@ export function permission(permission: string): PermissionPermissionSpec {
 
 const permissionEvaluator: PermissionEvaluator<PermissionPermissionSpec> = (
   { permission },
-  context
+  context,
 ) => context.permissions.has(permission);
 
 export const defaultPermissionEvaluators: PermissionEvaluators = {

@@ -1,4 +1,4 @@
-import { AWSLambda, } from "@sentry/serverless";
+import { AWSLambda } from "@sentry/serverless";
 import type { User } from "@sentry/types";
 import type { Handler } from "aws-lambda";
 
@@ -11,7 +11,7 @@ export type SentryOptions = {
 
 export type SentryWrapper = <TEvent, TResult>(
   handler: Handler<TEvent, TResult>,
-  wrapOptions?: Partial<AWSLambda.WrapperOptions>
+  wrapOptions?: Partial<AWSLambda.WrapperOptions>,
 ) => Handler<TEvent, TResult>;
 
 export function createSentryWrapper(options?: SentryOptions): SentryWrapper {

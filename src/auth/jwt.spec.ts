@@ -9,6 +9,7 @@ import {
 import { HttpResponse, http } from "msw";
 import { SetupServer, setupServer } from "msw/node";
 import { JWK, JWS } from "node-jose";
+import { LoggerImpl } from "../logging";
 import { JwtAlgorithm, createJwtVerifyer } from "./jwt";
 
 describe("jwt", () => {
@@ -39,7 +40,7 @@ describe("jwt", () => {
         algorithm,
         "https://issuer.com",
         "https://audience.com",
-        server
+        server,
       );
 
       const verifyer = createJwtVerifyer({
@@ -49,13 +50,14 @@ describe("jwt", () => {
       });
 
       const token = await createToken("test");
+      const logger = new LoggerImpl();
 
-      await expect(verifyer(token)).resolves.toEqual({
+      await expect(verifyer(token, logger)).resolves.toEqual({
         sub: "test",
         iss: issuer,
         aud: audience,
       });
-    })
+    }),
   );
 });
 
@@ -63,7 +65,7 @@ async function createIssuer(
   algorithm: JwtAlgorithm,
   issuer: string,
   audience: string,
-  server: SetupServer
+  server: SetupServer,
 ) {
   const keystore = JWK.createKeyStore();
   const { kty, size } = getKeyOptions(algorithm);
@@ -74,8 +76,8 @@ async function createIssuer(
 
   server.use(
     http.get(`${issuer}/.well-known/jwks.json`, () =>
-      HttpResponse.json(keystore.toJSON())
-    )
+      HttpResponse.json(keystore.toJSON()),
+    ),
   );
 
   return {
@@ -84,7 +86,7 @@ async function createIssuer(
     async createToken(sub: string) {
       const result = await JWS.createSign(
         { format: "compact", fields: { typ: "jwt" } },
-        key
+        key,
       )
         .update(JSON.stringify({ sub, iss: issuer, aud: audience }))
         .final();

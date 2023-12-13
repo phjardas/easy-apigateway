@@ -13,10 +13,10 @@ import type {
 } from "./types";
 
 export function createAuthorizers(
-  authorizers: Array<AuthorizerRegistration>
+  authorizers: Array<AuthorizerRegistration>,
 ): Record<string, RequestHandler> {
   return Object.fromEntries(
-    authorizers.map((spec) => [spec.id, createAuthorizer(spec)])
+    authorizers.map((spec) => [spec.id, createAuthorizer(spec)]),
   );
 }
 
@@ -32,7 +32,7 @@ function createAuthorizer(spec: AuthorizerRegistration): RequestHandler {
 }
 
 function createTokenAuthorizer(
-  authorizer: APIGatewayTokenAuthorizerHandler
+  authorizer: APIGatewayTokenAuthorizerHandler,
 ): RequestHandler {
   return createAuthorizerInternal(async (req) => {
     const authorizationToken = req.headers.authorization;
@@ -40,7 +40,7 @@ function createTokenAuthorizer(
     return authorizer(
       { type: "TOKEN", authorizationToken, methodArn: "local" },
       null as any,
-      null as any
+      null as any,
     );
   });
 }
@@ -57,7 +57,7 @@ function createRequestAuthorizer({
     return authorizer(
       { type: "REQUEST", methodArn: "local", ...createEvent<undefined>(req) },
       null as any,
-      null as any
+      null as any,
     );
   });
 }
@@ -67,7 +67,7 @@ function findToken(
   {
     queryParameters = [],
     headers = [],
-  }: Pick<RequestAuthorizerRegistration, "queryParameters" | "headers">
+  }: Pick<RequestAuthorizerRegistration, "queryParameters" | "headers">,
 ): string | undefined {
   return (
     queryParameters.find((param) => req.query[param]) ??
@@ -76,7 +76,7 @@ function findToken(
 }
 
 function createAuthorizerInternal(
-  handler: (req: Request) => Promise<APIGatewayAuthorizerResult | null | void>
+  handler: (req: Request) => Promise<APIGatewayAuthorizerResult | null | void>,
 ): RequestHandler {
   return async (req, res, next) => {
     try {
