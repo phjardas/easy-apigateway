@@ -3,26 +3,25 @@ import type {
   APIGatewayProxyEventBase,
   APIGatewayProxyResult,
   Context,
-  Handler,
 } from "aws-lambda";
 import * as express from "express";
-import type { AuthorizedLambdaEvent, AuthorizerContext } from "../types";
+import { LoggerImpl } from "../logging";
+import type {
+  AuthorizedLambdaEvent,
+  AuthorizerContext,
+  HTTPLambdaHandler,
+} from "../types";
 
 export function expressLambda(
   name: string,
-  handler: Handler<
-    APIGatewayProxyEventBase<AuthorizerContext>,
-    APIGatewayProxyResult | undefined
-  >
+  handler: HTTPLambdaHandler,
 ): express.RequestHandler {
   return async (req, res, next) => {
     try {
       const event = createEvent<AuthorizerContext>(req);
       const context = createContext({ name });
-
-      const response = await handler(event, context, () => {
-        throw new Error("Lambda handler with callback is not supported");
-      });
+      const logger = new LoggerImpl();
+      const response = await handler(event, context, logger);
 
       sendResponse(response, res);
     } catch (error) {
@@ -32,11 +31,11 @@ export function expressLambda(
 }
 
 export function createEvent<TAuthorizerContext>(
-  req: express.Request
+  req: express.Request,
 ): APIGatewayProxyEventBase<TAuthorizerContext> {
   const headers = Object.entries(req.headers).reduce(
     (acc, [key, value]) => ({ ...acc, [key]: value }),
-    {}
+    {},
   );
 
   return {
@@ -70,7 +69,7 @@ export function createEvent<TAuthorizerContext>(
 }
 
 function parseBody(
-  body: null | string | Buffer
+  body: null | string | Buffer,
 ): Pick<APIGatewayProxyEventBase<unknown>, "body" | "isBase64Encoded"> {
   if (body instanceof Buffer) {
     return {
@@ -118,13 +117,13 @@ export function createContext({
 
 function sendResponse(
   response: APIGatewayProxyResult | undefined | void,
-  res: express.Response<unknown, Record<string, unknown>>
+  res: express.Response<unknown, Record<string, unknown>>,
 ) {
   if (response) {
     res.status(response.statusCode || 200);
     if (response.headers) {
       Object.entries(response.headers).forEach(([key, value]) =>
-        res.set(key, value.toString())
+        res.set(key, value.toString()),
       );
     }
 
@@ -132,7 +131,7 @@ function sendResponse(
       res.send(
         response.isBase64Encoded
           ? Buffer.from(response.body, "base64")
-          : response.body
+          : response.body,
       );
     } else {
       res.end();
@@ -143,7 +142,7 @@ function sendResponse(
 }
 
 function createQueryStringParameters(
-  req: express.Request
+  req: express.Request,
 ): Pick<
   AuthorizedLambdaEvent,
   "queryStringParameters" | "multiValueQueryStringParameters"
@@ -151,12 +150,15 @@ function createQueryStringParameters(
   const entries = Object.entries(req.query).map(([key, value]) =>
     typeof value === "string"
       ? [key, [value]]
-      : [key, Array.isArray(value) ? value.map((v) => v.toString()) : undefined]
+      : [
+          key,
+          Array.isArray(value) ? value.map((v) => v.toString()) : undefined,
+        ],
   );
 
   return {
     queryStringParameters: Object.fromEntries(
-      entries.map(([key, value]) => [key, value?.slice(-1)?.[0]])
+      entries.map(([key, value]) => [key, value?.slice(-1)?.[0]]),
     ),
     multiValueQueryStringParameters: Object.fromEntries(entries),
   };

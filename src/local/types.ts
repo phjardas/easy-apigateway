@@ -1,4 +1,5 @@
 import type {
+  APIGatewayProxyHandler,
   APIGatewayRequestAuthorizerHandler,
   APIGatewayTokenAuthorizerHandler,
 } from "aws-lambda";
@@ -22,7 +23,7 @@ export type AuthorizerRegistration = { id: string } & (
 );
 
 export type HandlerResolver = (
-  handlerId: string
+  handlerId: string,
 ) => HTTPLambdaHandler | Promise<HTTPLambdaHandler>;
 
 export type Method =
@@ -57,6 +58,6 @@ export type Route = {
 export type APIOptions = {
   handlerResolver: HandlerResolver;
   routes: Array<Route>;
-  optionsHandler?: HTTPLambdaHandler;
+  optionsHandler?: APIGatewayProxyHandler;
   authorizers?: Array<AuthorizerRegistration>;
 };

@@ -1,5 +1,5 @@
 import * as bodyParser from "body-parser";
-import { RequestHandler, Router } from "express";
+import { Router, type RequestHandler } from "express";
 import type { HTTPLambdaHandler } from "../types";
 import { createAuthorizers } from "./authorizer";
 import { expressLambda } from "./express-lambda";
@@ -59,7 +59,7 @@ class LocalExpressAPI {
             bodyParser.raw({
               type: requestBody.mimeTypes ?? "*/*",
               limit: requestBody.limit,
-            })
+            }),
           );
           break;
         }
@@ -104,13 +104,8 @@ export async function createLocalExpressAPI({
         .map((route) => route.path)
         .filter((val, index, arr) => arr.indexOf(val) === index)
         .map((path) =>
-          api.route({
-            method: "options",
-            path,
-            handlerId: "cors",
-            handler: optionsHandler,
-          })
-        )
+          api.route({ method: "options", path, handlerId: "cors" }),
+        ),
     );
   }
 

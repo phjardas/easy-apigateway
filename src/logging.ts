@@ -3,7 +3,12 @@ import log, { type JsonLog } from "json-log";
 export * from "json-log";
 export { default } from "json-log";
 
-export interface Logger {}
+export interface Logger {
+  addContext(context: Record<string, unknown>): void;
+  info(message: string, data?: Record<string, unknown>): void;
+  warn(message: string, data?: Record<string, unknown>): void;
+  error(message: string, data?: Record<string, unknown>): void;
+}
 
 export class LoggerImpl implements Logger {
   constructor(
