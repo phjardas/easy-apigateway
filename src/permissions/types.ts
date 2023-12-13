@@ -1,3 +1,5 @@
+import { type Logger } from "../logging";
+
 export type PermissionSpec = { type: string };
 
 export type HasPermissions = (
@@ -33,11 +35,12 @@ export type PermissionsEvaluator = {
 export type PermissionEvaluatorContext = {
   principalId: string;
   permissions: Set<string>;
+  logger: Logger;
 };
 
 export type PermissionEvaluator<Spec extends PermissionSpec> = (
   spec: Spec,
-  context: PermissionEvaluatorContext
+  context: PermissionEvaluatorContext,
 ) => boolean | Promise<boolean>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

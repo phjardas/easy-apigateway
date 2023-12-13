@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   APIGatewayProxyEventBase,
+  APIGatewayProxyHandler,
   APIGatewayProxyResult,
   Handler,
 } from "aws-lambda";
@@ -8,9 +9,10 @@ import { ValidationError } from "yup";
 import { applyCacheConfig } from "./caching";
 import { createOptionsLambda } from "./cors";
 import { InternationalizableError, StatusError } from "./error";
+import { LoggerImpl, type Logger } from "./logging";
 import {
-  defaultPermissionEvaluators,
   PermissionEvaluatorFactory,
+  defaultPermissionEvaluators,
 } from "./permissions";
 import {
   captureErrorWithSentry,
@@ -39,7 +41,7 @@ export class LambdaFramework {
     this.sentryWrapper = createSentryWrapper(
       options.sentry
         ? { ...options.sentry, environment: options.stage }
-        : undefined
+        : undefined,
     );
 
     this.permissionEvaluatorFactory = new PermissionEvaluatorFactory({
@@ -65,15 +67,15 @@ export class LambdaFramework {
    */
   authorized(
     handler: AuthorizedLambdaHandler,
-    lambdaOptions?: LambdaOptions
+    lambdaOptions?: LambdaOptions,
   ): Handler<
     APIGatewayProxyEventBase<AuthorizerContext>,
     APIGatewayProxyResult | undefined
   > {
-    return this.unauthorized((event) => {
-      const context = this.createAuthContext(event);
+    return this.unauthorized((event, _, logger) => {
+      const context = this.createAuthContext(event, logger);
       setSentryUser({ id: context.principalId });
-      return handler(event, context);
+      return handler(event, context, logger);
     }, lambdaOptions);
   }
 
@@ -94,11 +96,21 @@ export class LambdaFramework {
    */
   unauthorized(
     handler: HTTPLambdaHandler,
-    lambdaOptions?: LambdaOptions
-  ): HTTPLambdaHandler {
-    return this.sentryWrapper(async (event, ...args) => {
+    lambdaOptions?: LambdaOptions,
+  ): APIGatewayProxyHandler {
+    return this.sentryWrapper(async (event, context) => {
       try {
-        const result = await handler(event, ...args);
+        const logger = new LoggerImpl({
+          requestId: event.requestContext.requestId,
+          resourceId: event.requestContext.resourceId,
+          resourcePath: event.requestContext.resourcePath,
+        });
+
+        const result = await handler(
+          event as APIGatewayProxyEventBase<AuthorizerContext>,
+          context,
+          logger,
+        );
 
         // Guess the API Gateway result from the return type
         const resultObject = result
@@ -117,7 +129,7 @@ export class LambdaFramework {
   /**
    * Create a lambda handler that always returns the exact same response.
    */
-  createStaticLambda(response: APIGatewayProxyResult): HTTPLambdaHandler {
+  createStaticLambda(response: APIGatewayProxyResult): APIGatewayProxyHandler {
     return this.unauthorized(async () => response);
   }
 
@@ -129,18 +141,22 @@ export class LambdaFramework {
    * export const handler = lambda.createOptionsLambda();
    * ```
    */
-  createOptionsLambda(): HTTPLambdaHandler {
+  createOptionsLambda(): APIGatewayProxyHandler {
     return createOptionsLambda(this, this.options.cors);
   }
 
-  private createAuthContext({
-    requestContext: { authorizer },
-  }: APIGatewayProxyEventBase<AuthorizerContext>): AuthContext {
+  private createAuthContext(
+    {
+      requestContext: { authorizer },
+    }: APIGatewayProxyEventBase<AuthorizerContext>,
+    logger: Logger,
+  ): AuthContext {
     const permissions = new Set<string>(JSON.parse(authorizer.permissions));
     const permissionsEvaluator =
       this.permissionEvaluatorFactory.createPermissionsEvaluator({
         principalId: authorizer.principalId,
         permissions,
+        logger,
       });
 
     return {
@@ -154,7 +170,7 @@ export class LambdaFramework {
   private createResponse(
     response: Omit<APIGatewayProxyResult, "body"> & { body: any },
     event: APIGatewayProxyEventBase<any>,
-    lambdaOptions?: LambdaOptions
+    lambdaOptions?: LambdaOptions,
   ): APIGatewayProxyResult {
     const headers: APIGatewayProxyResult["headers"] = {
       "content-type": "application/json;charset=utf-8",
@@ -192,13 +208,13 @@ export class LambdaFramework {
   // public for tests
   createErrorResponse(
     error: unknown,
-    event: APIGatewayProxyEventBase<any>
+    event: APIGatewayProxyEventBase<any>,
   ): APIGatewayProxyResult {
     // special handling for `yup` validation errors
     if (error instanceof ValidationError) {
       return this.createResponse(
         createYupValidationErrorResponse(error),
-        event
+        event,
       );
     }
 
@@ -231,7 +247,7 @@ export class LambdaFramework {
 
       return parseInt(
         (error.code ?? error.status ?? error.StatusCode ?? 500).toString(),
-        10
+        10,
       );
     } catch (e) {
       console.error("Error getting status code from error:", e);

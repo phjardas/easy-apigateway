@@ -14,7 +14,7 @@ export function parseBody<T>(event: APIGatewayProxyEventBase<unknown>): T {
  * Parse the body of an incoming HTTP request, if present.
  */
 export function parseBodyMaybe<T>(
-  event: APIGatewayProxyEventBase<unknown>
+  event: APIGatewayProxyEventBase<unknown>,
 ): T | undefined {
   if (!event.body) return;
   const body = event.isBase64Encoded
@@ -31,7 +31,7 @@ export function parseBodyMaybe<T>(
 
 function pathParam(
   event: APIGatewayProxyEventBase<unknown>,
-  key: string
+  key: string,
 ): string {
   const value = event.pathParameters?.[key];
   if (value === undefined) {
@@ -51,11 +51,11 @@ function pathParam(
 // TODO: the API of this method is clumsy, can we do better?
 export function pathParams<T>(
   event: APIGatewayProxyEventBase<unknown>,
-  keys: Array<keyof T>
+  keys: Array<keyof T>,
 ): T {
   return keys.reduce(
     (params, key) => ({ ...params, [key]: pathParam(event, key.toString()) }),
-    {} as T
+    {} as T,
   );
 }
 

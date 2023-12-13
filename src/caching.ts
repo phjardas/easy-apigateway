@@ -59,7 +59,7 @@ export function applyCacheConfig({
 
     if (options.maxAge) {
       headers["expires"] = new Date(
-        lastModifiedRounded + options.maxAge
+        lastModifiedRounded + options.maxAge,
       ).toUTCString();
     }
   }
@@ -89,7 +89,7 @@ export function applyCacheConfig({
  * timestamp in milliseconds.
  */
 export function extractLastModifiedFromProperty(
-  lastModifiedKey: string
+  lastModifiedKey: string,
 ): GetLastModifiedFn {
   return (body: any) => {
     if (Array.isArray(body)) {

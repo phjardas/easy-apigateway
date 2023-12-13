@@ -3,6 +3,7 @@ import type {
   APIGatewayRequestAuthorizerHandler,
   APIGatewayTokenAuthorizerHandler,
 } from "aws-lambda";
+import { LoggerImpl } from "../logging";
 import type { AuthorizerContext } from "../types";
 import type {
   AuthorizerContextCreator,
@@ -13,28 +14,36 @@ import type {
  * Create a lambda handler that acts as an API Gateway authorizer.
  */
 export function createTokenAuthorizerLambda(
-  createAuthorizerContext: AuthorizerContextCreator
+  createAuthorizerContext: AuthorizerContextCreator,
 ): APIGatewayTokenAuthorizerHandler {
   return async ({ authorizationToken, methodArn }) => {
+    const logger = new LoggerImpl({ authorizationToken, methodArn });
+
     try {
-      const context = await createAuthorizerContext(authorizationToken);
+      const context = await createAuthorizerContext(authorizationToken, logger);
       return createPolicy(context, methodArn);
     } catch (error) {
-      console.error("Error:", error);
+      logger.error("Error authorizing request", { error });
       throw "Unauthorized";
     }
   };
 }
 
 export function createRequestAuthorizerLambda(
-  createAuthorizerContext: RequestAuthorizerContextCreator
+  createAuthorizerContext: RequestAuthorizerContextCreator,
 ): APIGatewayRequestAuthorizerHandler {
   return async (event) => {
+    const logger = new LoggerImpl({
+      requestId: event.requestContext.requestId,
+      resourceId: event.requestContext.resourceId,
+      resourcePath: event.requestContext.resourcePath,
+    });
+
     try {
-      const context = await createAuthorizerContext(event);
+      const context = await createAuthorizerContext(event, logger);
       return createPolicy(context, event.methodArn);
     } catch (error) {
-      console.error("Error:", error);
+      logger.error("Error authorizing request", { error });
       throw "Unauthorized";
     }
   };
@@ -42,7 +51,7 @@ export function createRequestAuthorizerLambda(
 
 function createPolicy(
   context: AuthorizerContext,
-  methodArn: string
+  methodArn: string,
 ): APIGatewayAuthorizerResult {
   return {
     principalId: context.principalId,

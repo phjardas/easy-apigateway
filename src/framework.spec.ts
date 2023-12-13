@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "@jest/globals";
 import { Context } from "aws-lambda";
-import { HTTPLambdaHandler } from "./types";
 import { InternationalizableError } from "./error";
 import { notFoundError } from "./errors";
 import { LambdaFramework } from "./framework";
+import { HTTPLambdaHandler } from "./types";
 
 describe("framework", () => {
   describe("unauthorized()", () => {
@@ -50,10 +50,11 @@ describe("framework", () => {
         throw notFoundError();
       });
 
-      expect(response.body).toEqual(
-        JSON.stringify({ message: "Not Found", messageKey: "errors.http.404" })
+      expect(response).toBeTruthy();
+      expect(response!.body).toEqual(
+        JSON.stringify({ message: "Not Found", messageKey: "errors.http.404" }),
       );
-      expect(response.statusCode).toEqual(404);
+      expect(response!.statusCode).toEqual(404);
     });
 
     it("should parse response code from InternationalizableError", async () => {
@@ -65,14 +66,15 @@ describe("framework", () => {
         });
       });
 
-      expect(response.body).toEqual(
+      expect(response).toBeTruthy();
+      expect(response!.body).toEqual(
         JSON.stringify({
           message: "Test Error",
           messageKey: "errors.test",
           messageArgs: ["arg1", "arg2"],
-        })
+        }),
       );
-      expect(response.statusCode).toEqual(500);
+      expect(response!.statusCode).toEqual(500);
     });
   });
 });

@@ -6,13 +6,13 @@ import {
   expect,
   it,
 } from "@jest/globals";
-import { rest } from "msw";
-import { setupServer, SetupServerApi } from "msw/node";
+import { HttpResponse, http } from "msw";
+import { SetupServer, setupServer } from "msw/node";
 import { JWK, JWS } from "node-jose";
-import { createJwtVerifyer, JwtAlgorithm } from "./jwt";
+import { JwtAlgorithm, createJwtVerifyer } from "./jwt";
 
 describe("jwt", () => {
-  let server: SetupServerApi;
+  let server: SetupServer;
 
   beforeAll(() => {
     server = setupServer();
@@ -63,7 +63,7 @@ async function createIssuer(
   algorithm: JwtAlgorithm,
   issuer: string,
   audience: string,
-  server: SetupServerApi
+  server: SetupServer
 ) {
   const keystore = JWK.createKeyStore();
   const { kty, size } = getKeyOptions(algorithm);
@@ -73,8 +73,8 @@ async function createIssuer(
   });
 
   server.use(
-    rest.get(`${issuer}/.well-known/jwks.json`, (_, res, ctx) =>
-      res(ctx.json(keystore.toJSON()))
+    http.get(`${issuer}/.well-known/jwks.json`, () =>
+      HttpResponse.json(keystore.toJSON())
     )
   );
 

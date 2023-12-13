@@ -4,13 +4,13 @@
 import { StatusError } from "./error";
 
 export function multipleChoicesError(
-  message = "Multiple Choices"
+  message = "Multiple Choices",
 ): StatusError {
   return new StatusError(300, message);
 }
 
 export function movedPermanentlyError(
-  message = "Moved Permanently"
+  message = "Moved Permanently",
 ): StatusError {
   return new StatusError(301, message);
 }
@@ -32,7 +32,7 @@ export function useProxyError(message = "Use Proxy"): StatusError {
 }
 
 export function temporaryRedirectError(
-  message = "Temporary Redirect"
+  message = "Temporary Redirect",
 ): StatusError {
   return new StatusError(307, message);
 }
@@ -46,7 +46,7 @@ export function unauthorizedError(message = "Unauthorized"): StatusError {
 }
 
 export function paymentRequiredError(
-  message = "Payment Required"
+  message = "Payment Required",
 ): StatusError {
   return new StatusError(402, message);
 }
@@ -60,7 +60,7 @@ export function notFoundError(message = "Not Found"): StatusError {
 }
 
 export function methodNotAllowedError(
-  message = "Method Not Allowed"
+  message = "Method Not Allowed",
 ): StatusError {
   return new StatusError(405, message);
 }
@@ -70,7 +70,7 @@ export function notAcceptableError(message = "Not Acceptable"): StatusError {
 }
 
 export function proxyAuthenticationRequiredError(
-  message = "Proxy Authentication Required"
+  message = "Proxy Authentication Required",
 ): StatusError {
   return new StatusError(407, message);
 }
@@ -92,43 +92,43 @@ export function lengthRequiredError(message = "Length Required"): StatusError {
 }
 
 export function preconditionFailedError(
-  message = "Precondition Failed"
+  message = "Precondition Failed",
 ): StatusError {
   return new StatusError(412, message);
 }
 
 export function requestEntityTooLargeError(
-  message = "Request Entity Too Large"
+  message = "Request Entity Too Large",
 ): StatusError {
   return new StatusError(413, message);
 }
 
 export function requestURITooLongError(
-  message = "Request-URI Too Long"
+  message = "Request-URI Too Long",
 ): StatusError {
   return new StatusError(414, message);
 }
 
 export function unsupportedMediaTypeError(
-  message = "Unsupported Media Type"
+  message = "Unsupported Media Type",
 ): StatusError {
   return new StatusError(415, message);
 }
 
 export function requestedRangeNotSatisfiableError(
-  message = "Requested Range Not Satisfiable"
+  message = "Requested Range Not Satisfiable",
 ): StatusError {
   return new StatusError(416, message);
 }
 
 export function expectationFailedError(
-  message = "Expectation Failed"
+  message = "Expectation Failed",
 ): StatusError {
   return new StatusError(417, message);
 }
 
 export function internalServerError(
-  message = "Internal Server Error"
+  message = "Internal Server Error",
 ): StatusError {
   return new StatusError(500, message);
 }
@@ -142,7 +142,7 @@ export function badGatewayError(message = "Bad Gateway"): StatusError {
 }
 
 export function serviceUnavailableError(
-  message = "Service Unavailable"
+  message = "Service Unavailable",
 ): StatusError {
   return new StatusError(503, message);
 }
@@ -152,7 +152,7 @@ export function gatewayTimeoutError(message = "Gateway Timeout"): StatusError {
 }
 
 export function httpVersionNotSupportedError(
-  message = "HTTP Version Not Supported"
+  message = "HTTP Version Not Supported",
 ): StatusError {
   return new StatusError(505, message);
 }

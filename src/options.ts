@@ -18,7 +18,7 @@ function createGet(env: Record<string, string | undefined>): Get {
  * options is missing, this function will throw.
  */
 export function parseLambdaFrameworkOptionsFromEnv(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
 ): LambdaFrameworkOptions {
   const get = createGet(env);
 

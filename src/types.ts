@@ -2,10 +2,11 @@
 import type {
   APIGatewayProxyEventBase,
   APIGatewayProxyResult,
-  Handler,
+  Context,
 } from "aws-lambda";
 import type { CacheOptions } from "./caching";
 import type { CorsOptions } from "./cors";
+import { type Logger } from "./logging";
 import type { PermissionEvaluators, PermissionsEvaluator } from "./permissions";
 import type { SentryOptions } from "./sentry";
 
@@ -38,6 +39,12 @@ export type LambdaFrameworkOptions = {
   sentry?: Omit<SentryOptions, "environment">;
 };
 
+export type Handler<TEvent, TResult> = (
+  event: TEvent,
+  context: Context,
+  logger: Logger,
+) => Promise<TResult>;
+
 export type HTTPLambdaHandler = Handler<
   APIGatewayProxyEventBase<AuthorizerContext>,
   APIGatewayProxyResult | any | undefined
@@ -55,7 +62,8 @@ export type AuthorizedLambdaEvent = Omit<
 
 export type AuthorizedLambdaHandler = (
   event: AuthorizedLambdaEvent,
-  context: AuthContext
+  context: AuthContext,
+  logger: Logger,
 ) => Promise<APIGatewayProxyResult | any | undefined>;
 
 export type LambdaOptions = {

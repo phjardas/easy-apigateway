@@ -1,6 +1,5 @@
-import type { APIGatewayProxyResult } from "aws-lambda";
+import type { APIGatewayProxyHandler, APIGatewayProxyResult } from "aws-lambda";
 import type { LambdaFramework } from "./framework";
-import type { HTTPLambdaHandler } from "./types";
 
 export type CorsOptions = {
   allowHeaders?: Array<string>;
@@ -19,8 +18,8 @@ const defaultOptions: CorsOptions = {
 
 export function createOptionsLambda(
   framework: LambdaFramework,
-  options?: CorsOptions
-): HTTPLambdaHandler {
+  options?: CorsOptions,
+): APIGatewayProxyHandler {
   return framework.createStaticLambda({
     statusCode: 204,
     headers: createHeaders(options),
@@ -29,7 +28,7 @@ export function createOptionsLambda(
 }
 
 function createHeaders(
-  options?: CorsOptions
+  options?: CorsOptions,
 ): APIGatewayProxyResult["headers"] {
   const {
     allowHeaders,

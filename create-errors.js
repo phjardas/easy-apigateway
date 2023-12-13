@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const fetch = require("node-fetch");
 const { promises: fs } = require("fs");
+const prettier = require("prettier");
 
 function functionName({ text }) {
   const name =
@@ -14,7 +15,7 @@ function functionName({ text }) {
 
 async function main() {
   const response = await fetch(
-    "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html"
+    "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html",
   );
   const html = await response.text();
   const errors = html
@@ -37,11 +38,12 @@ async function main() {
           error.text
         }"): StatusError {\n  return new StatusError(${
           error.status
-        }, message);\n}\n`
+        }, message);\n}\n`,
     ),
   ].join("\n");
 
-  await fs.writeFile("src/errors.ts", code, "utf-8");
+  const formatted = await prettier.format(code, { filepath: "src/errors.ts" });
+  await fs.writeFile("src/errors.ts", formatted, "utf-8");
 }
 
 main().catch((error) => {

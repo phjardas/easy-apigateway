@@ -10,7 +10,7 @@ type FormattedValidationError = {
 };
 
 export function createYupValidationErrorResponse(
-  error: ValidationError
+  error: ValidationError,
 ): APIGatewayProxyResult {
   return {
     statusCode: 400,
@@ -22,7 +22,7 @@ export function createYupValidationErrorResponse(
 }
 
 function formatValidationError(
-  error: ValidationError
+  error: ValidationError,
 ): FormattedValidationError {
   return {
     path: error.path,

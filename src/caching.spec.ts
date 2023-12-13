@@ -161,7 +161,7 @@ describe("caching", () => {
   describe("extractLastModifiedFromProperty", () => {
     it("should extract property from an object body", () => {
       expect(
-        extractLastModifiedFromProperty("updatedAt")({ updatedAt: 1 })
+        extractLastModifiedFromProperty("updatedAt")({ updatedAt: 1 }),
       ).toBe(1);
     });
 
@@ -176,13 +176,13 @@ describe("caching", () => {
           {},
           { updatedAt: 3 },
           { updatedAt: 1 },
-        ])
+        ]),
       ).toBe(3);
     });
 
     it("should not extract property from an array of objects with no matching property", () => {
       expect(
-        extractLastModifiedFromProperty("updatedAt")([{}, {}])
+        extractLastModifiedFromProperty("updatedAt")([{}, {}]),
       ).toBeUndefined();
     });
   });

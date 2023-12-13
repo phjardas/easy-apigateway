@@ -4,6 +4,7 @@ export * from "./error";
 export * from "./errors";
 export * from "./framework";
 export * from "./local";
+export * from "./logging";
 export * from "./options";
 export * from "./permissions";
 export * from "./responses";

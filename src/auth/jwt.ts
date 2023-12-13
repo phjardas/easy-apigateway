@@ -1,7 +1,8 @@
-import { JwtHeader, SigningKeyCallback, verify } from "jsonwebtoken";
+import { verify, type JwtHeader, type SigningKeyCallback } from "jsonwebtoken";
 import { JwksClient } from "jwks-rsa";
-import { AuthorizerContext } from "../types";
-import { AuthorizerContextCreator } from "./types";
+import { type Logger } from "../logging";
+import type { AuthorizerContext } from "../types";
+import type { AuthorizerContextCreator } from "./types";
 
 export type JwtAlgorithm =
   | "HS256"
@@ -33,7 +34,10 @@ export interface JwtPayload {
     | undefined;
 }
 
-export type JwtVerifyer = (authToken: string) => Promise<JwtPayload>;
+export type JwtVerifyer = (
+  authToken: string,
+  logger: Logger,
+) => Promise<JwtPayload>;
 
 export type JwtOptions = {
   /**
@@ -85,8 +89,8 @@ export function createJwtVerifyer(options: JwtOptions): JwtVerifyer {
           if (err) return reject(err);
           if (!payload) return reject(new Error("No JWT payload"));
           resolve(payload as JwtPayload);
-        }
-      )
+        },
+      ),
     );
 }
 
@@ -99,21 +103,22 @@ export function createJwtAuthorizer({
   ...options
 }: JwtOptions & {
   parsePayload: (
-    payload: JwtPayload
+    payload: JwtPayload,
+    logger: Logger,
   ) =>
     | Omit<AuthorizerContext, "authToken">
     | Promise<Omit<AuthorizerContext, "authToken">>;
 }): AuthorizerContextCreator {
   const verifyer = createJwtVerifyer(options);
 
-  return async (authorizationToken) => {
+  return async (authorizationToken, logger) => {
     const [type, token] = authorizationToken.split(/\s+/, 2);
     if (type !== "Bearer") {
       throw new Error(`Invalid authorization token type: ${type}`);
     }
 
-    const payload = await verifyer(token);
-    const context = await parsePayload(payload);
+    const payload = await verifyer(token, logger);
+    const context = await parsePayload(payload, logger);
     return { authToken: token, ...context };
   };
 }
