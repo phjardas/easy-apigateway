@@ -1,5 +1,11 @@
 # easy-apigateway
 
+## 0.5.1
+
+### Path Changes
+
+- Encode and decode path parameters
+
 ## 0.5.0
 
 ### Minor Changes
