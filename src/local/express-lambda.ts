@@ -5,6 +5,7 @@ import type {
   Context,
 } from "aws-lambda";
 import * as express from "express";
+import { type ParamsDictionary } from "express-serve-static-core";
 import { LoggerImpl } from "../logging";
 import type {
   AuthorizedLambdaEvent,
@@ -39,7 +40,7 @@ export function createEvent<TAuthorizerContext>(
   );
 
   return {
-    pathParameters: req.params,
+    pathParameters: encodePathParameters(req.params),
     ...createQueryStringParameters(req),
     ...parseBody(req.body),
     headers,
@@ -66,6 +67,15 @@ export function createEvent<TAuthorizerContext>(
       authorizer: (req as any).authContext as TAuthorizerContext,
     },
   };
+}
+
+function encodePathParameters(params: ParamsDictionary): ParamsDictionary {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      encodeURIComponent(value),
+    ]),
+  );
 }
 
 function parseBody(

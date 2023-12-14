@@ -37,7 +37,7 @@ function pathParam(
   if (value === undefined) {
     throw badRequestError(`Missing path parameter: ${key}`);
   }
-  return value;
+  return decodeURIComponent(value);
 }
 
 /**
